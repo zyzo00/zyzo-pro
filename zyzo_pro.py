@@ -1,5 +1,5 @@
 """
-zyzo_pro — نسخة كاملة جاهزة للرفع على Railway
+zyzo_pro — نسخة كاملة جاهزة للرفع على Railway ومتوافقة مع تطبيق الفلاتر
 تشغيل محلي: python zyzo_pro.py
 """
 
@@ -15,7 +15,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse
     from pydantic import BaseModel
-    from typing import List
+    from typing import List, Any
 except ImportError:
     print("📦 جاري تثبيت المكتبات...")
     os.system(f"{sys.executable} -m pip install fastapi uvicorn google-genai")
@@ -145,10 +145,24 @@ Respond ONLY with valid JSON (no markdown, no extra text):
   "word_count": 280,
   "reading_time_minutes": 2,
   "vocabulary": [
-    {{"word":"example","definition":"simple definition","example":"sentence using word","part_of_speech":"noun"}}
+    {{
+      "word": "example",
+      "definition": "simple definition",
+      "example": "sentence using word",
+      "part_of_speech": "noun"
+    }}
   ],
   "questions": [
-    {{"question_type":"comprehension","question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_answer":"A","explanation":"..."}}
+    {{
+      "question_type": "comprehension",
+      "question_text": "...",
+      "option_a": "...",
+      "option_b": "...",
+      "option_c": "...",
+      "option_d": "...",
+      "correct_answer": "A",
+      "explanation": "..."
+    }}
   ]
 }}
 
@@ -167,7 +181,7 @@ Rules:
         text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
     return json.loads(text)
 
-# ── HTML ──────────────────────────────────────────────────────────────────────
+# ── HTML Interface ────────────────────────────────────────────────────────────
 HTML = r"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -389,7 +403,6 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 const S = { userId: null, lesson: null, answers: [], currentQ: 0 };
-// تم إصلاح الرابط هنا ليعمل ديناميكياً محلياً وعلى السيرفر
 const API = window.location.origin + '/api';
 const LEVEL_AR = { beginner:'مبتدئ', elementary:'أساسي', intermediate:'متوسط', upper_intermediate:'فوق المتوسط', advanced:'متقدم' };
 
@@ -587,7 +600,6 @@ async def lifespan(app: FastAPI):
     print("🚀 zyzo_pro يعمل بسلام واستقرار!")
     print("="*50 + "\n")
     
-    # حظر تشغيل متصفح تلقائي على سيرفر سحابي (لمنع أخطاء Docker/Railway)
     if os.environ.get("PORT") is None:
         def open_browser():
             time.sleep(1.5)
@@ -719,9 +731,6 @@ def get_profile(user_id: int):
         "lessons": [dict(l) for l in lessons]
     }
 
-# ── سطر التشغيل المتوافق والمصلح تماماً لـ Railway ──────────────────────────────────────────
 if __name__ == "__main__":
-    # قراءة المنفذ الديناميكي من Railway، والافتراضي 8080 لتجنب التعارض
     port = int(os.environ.get("PORT", 8080))
-    # المضيف 0.0.0.0 ضروري لفتح الاتصال الخارجي للإنترنت
     uvicorn.run("zyzo_pro:app", host="0.0.0.0", port=port, reload=False)
