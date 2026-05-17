@@ -396,7 +396,7 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 const S = { userId: null, lesson: null, answers: [], currentQ: 0 };
-const API = 'http://localhost:8000/api';
+const API = 'https://zyzo-pro-production.up.railway.app/api';
 const LEVEL_AR = { beginner:'مبتدئ', elementary:'أساسي', intermediate:'متوسط', upper_intermediate:'فوق المتوسط', advanced:'متقدم' };
 
 window.onload = () => {
