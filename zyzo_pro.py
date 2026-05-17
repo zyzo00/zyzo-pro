@@ -31,8 +31,7 @@ except ImportError:
     sys.exit(0)
 
 # ── إعدادات ───────────────────────────────────────────────────────────────────
-# ضع مفتاحك هنا مباشرة
-GEMINI_API_KEY = "AIzaSyBMeqCgx0Xp7E9NOddArPnQ9e9RQLRzJWU"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL   = "models/gemini-2.5-flash"
 DB_PATH        = Path(__file__).parent / "zyzo.db"
 
@@ -718,5 +717,7 @@ def get_profile(user_id: int):
     return {"user":dict(user),"streak":dict(streak) if streak else {},
             "radar":dict(radar) if radar else {},"lessons":[dict(l) for l in lessons]}
 
+import os
 if __name__ == "__main__":
-    uvicorn.run("zyzo_pro:app", host="0.0.0.0", port=8000, reload=False)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
