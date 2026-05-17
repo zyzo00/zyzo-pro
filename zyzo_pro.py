@@ -1,6 +1,6 @@
 """
-zyzo_pro — نسخة تجريبية كاملة
-تشغيل: python zyzo_pro.py
+zyzo_pro — نسخة كاملة جاهزة للرفع على Railway
+تشغيل محلي: python zyzo_pro.py
 """
 
 import json, os, sqlite3, sys, webbrowser, threading, time
@@ -114,7 +114,6 @@ def init_gemini(api_key: str):
     client = genai.Client(api_key=api_key)
     try:
         models = [m.name for m in client.models.list()]
-        print(f"النماذج المتاحة: {models[:5]}...")
         chosen = GEMINI_MODEL
         for name in models:
             if "gemini-2.5-flash" in name and "preview" not in name and "audio" not in name:
@@ -130,7 +129,7 @@ def init_gemini(api_key: str):
 
 def generate_lesson_ai(level, goal, interests, recent_topics):
     if _STATE["client"] is None:
-        raise RuntimeError("Gemini غير مهيأ — تأكد من صحة GEMINI_API_KEY في الكود")
+        raise RuntimeError("Gemini غير مهيأ — تأكد من صحة GEMINI_API_KEY في متغيرات البيئة")
     interests_s = ", ".join(interests) if interests else "general topics"
     avoid_s     = ", ".join(recent_topics) if recent_topics else "none"
     prompt = f"""You are an expert English teacher. Generate a daily English lesson.
@@ -243,7 +242,6 @@ HTML = r"""<!DOCTYPE html>
 </head>
 <body>
 
-<!-- شاشة Onboarding -->
 <div id="screen-onboarding" class="screen active">
   <div style="margin-top:20px">
     <div class="logo">zyzo_pro</div>
@@ -293,7 +291,6 @@ HTML = r"""<!DOCTYPE html>
   <button class="btn btn-primary" onclick="submitOnboarding()">ابدأ التعلم 🚀</button>
 </div>
 
-<!-- شاشة التحميل -->
 <div id="screen-loading" class="screen">
   <div class="loading">
     <div class="spinner"></div>
@@ -302,7 +299,6 @@ HTML = r"""<!DOCTYPE html>
   </div>
 </div>
 
-<!-- شاشة الدرس -->
 <div id="screen-lesson" class="screen">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div class="logo" style="font-size:22px">zyzo_pro</div>
@@ -325,7 +321,6 @@ HTML = r"""<!DOCTYPE html>
   <button class="btn btn-primary" onclick="startQuiz()">ابدأ الاختبار ←</button>
 </div>
 
-<!-- شاشة الاختبار -->
 <div id="screen-quiz" class="screen">
   <div>
     <div class="quiz-progress"><div class="quiz-progress-bar" id="quiz-progress-bar" style="width:0%"></div></div>
@@ -337,7 +332,6 @@ HTML = r"""<!DOCTYPE html>
   <button class="btn btn-primary" id="q-next-btn" onclick="nextQuestion()" style="display:none">التالي ←</button>
 </div>
 
-<!-- شاشة النتائج -->
 <div id="screen-results" class="screen">
   <div class="logo" style="font-size:22px;text-align:right">النتيجة 🎉</div>
   <div class="card" style="text-align:center;gap:12px;display:flex;flex-direction:column">
@@ -366,7 +360,6 @@ HTML = r"""<!DOCTYPE html>
   <button class="btn btn-outline" onclick="showScreen('screen-profile')">الملف الشخصي</button>
 </div>
 
-<!-- شاشة الملف الشخصي -->
 <div id="screen-profile" class="screen">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div class="logo" style="font-size:22px">الملف الشخصي</div>
@@ -396,7 +389,8 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 const S = { userId: null, lesson: null, answers: [], currentQ: 0 };
-const API = 'https://zyzo-pro-production.up.railway.app/api';
+// تم إصلاح الرابط هنا ليعمل ديناميكياً محلياً وعلى السيرفر
+const API = window.location.origin + '/api';
 const LEVEL_AR = { beginner:'مبتدئ', elementary:'أساسي', intermediate:'متوسط', upper_intermediate:'فوق المتوسط', advanced:'متقدم' };
 
 window.onload = () => {
@@ -587,12 +581,18 @@ async def lifespan(app: FastAPI):
     if GEMINI_API_KEY:
         init_gemini(GEMINI_API_KEY)
     else:
-        print("⚠️  GEMINI_API_KEY فارغ! أضف مفتاحك في السطر 25 من الكود")
+        print("⚠️  GEMINI_API_KEY فارغ! أضف مفتاحك في متغيرات البيئة على Railway")
+    
     print("\n" + "="*50)
-    print("🚀 zyzo_pro يعمل!")
-    print("🌐 افتح المتصفح على: http://localhost:8000")
+    print("🚀 zyzo_pro يعمل بسلام واستقرار!")
     print("="*50 + "\n")
- 
+    
+    # حظر تشغيل متصفح تلقائي على سيرفر سحابي (لمنع أخطاء Docker/Railway)
+    if os.environ.get("PORT") is None:
+        def open_browser():
+            time.sleep(1.5)
+            webbrowser.open("http://localhost:8080")
+        threading.Thread(target=open_browser, daemon=True).start()
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -710,11 +710,18 @@ def get_profile(user_id: int):
         (user_id,)
     ).fetchall()
     conn.close()
-    if not user: raise HTTPException(404, "Not found")
-    return {"user":dict(user),"streak":dict(streak) if streak else {},
-            "radar":dict(radar) if radar else {},"lessons":[dict(l) for l in lessons]}
+    if not user:
+        raise HTTPException(404, "User not found")
+    return {
+        "user": dict(user),
+        "streak": dict(streak) if streak else {},
+        "radar": dict(radar) if radar else {},
+        "lessons": [dict(l) for l in lessons]
+    }
 
-import os
-port = int(os.environ.get("PORT", 8080))
+# ── سطر التشغيل المتوافق والمصلح تماماً لـ Railway ──────────────────────────────────────────
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # قراءة المنفذ الديناميكي من Railway، والافتراضي 8080 لتجنب التعارض
+    port = int(os.environ.get("PORT", 8080))
+    # المضيف 0.0.0.0 ضروري لفتح الاتصال الخارجي للإنترنت
+    uvicorn.run("zyzo_pro:app", host="0.0.0.0", port=port, reload=False)
