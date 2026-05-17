@@ -592,10 +592,7 @@ async def lifespan(app: FastAPI):
     print("🚀 zyzo_pro يعمل!")
     print("🌐 افتح المتصفح على: http://localhost:8000")
     print("="*50 + "\n")
-    def open_browser():
-        time.sleep(1.5)
-        webbrowser.open("http://localhost:8000")
-    threading.Thread(target=open_browser, daemon=True).start()
+ 
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -718,6 +715,6 @@ def get_profile(user_id: int):
             "radar":dict(radar) if radar else {},"lessons":[dict(l) for l in lessons]}
 
 import os
+port = int(os.environ.get("PORT", 8080))
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
