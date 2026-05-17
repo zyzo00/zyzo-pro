@@ -384,7 +384,7 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 const S = { userId: null, lesson: null, answers: [], currentQ: 0 };
-const API = 'http://localhost:8000/api';
+const API = 'https://zyzo-pro-production.up.railway.app/api';
 const LEVEL_AR = { beginner:'مبتدئ', elementary:'أساسي', intermediate:'متوسط', upper_intermediate:'فوق المتوسط', advanced:'متقدم' };
 
 window.onload = () => {
@@ -578,12 +578,7 @@ async def lifespan(app: FastAPI):
         print("⚠️  GEMINI_API_KEY فارغ! أضف مفتاحك في السطر 25 من الكود")
     print("\n" + "="*50)
     print("🚀 zyzo_pro يعمل!")
-    print("🌐 افتح المتصفح على: http://localhost:8000")
     print("="*50 + "\n")
-    def open_browser():
-        time.sleep(1.5)
-        webbrowser.open("http://localhost:8000")
-    threading.Thread(target=open_browser, daemon=True).start()
     yield
 
 app = FastAPI(lifespan=lifespan)
