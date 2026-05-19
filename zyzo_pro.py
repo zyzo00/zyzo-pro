@@ -3,7 +3,7 @@ zyzo_pro — نسخة كاملة جاهزة للرفع على Railway ومتوا
 تشغيل محلي: python zyzo_pro.py
 """
 
-import json, os, sqlite3
+import json, os, sqlite3, sys, webbrowser, threading, time
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from pathlib import Path
@@ -174,12 +174,26 @@ Rules:
     resp = _STATE["client"].models.generate_content(
         model=_STATE["model"],
         contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.85, max_output_tokens=3000)
+        config=types.GenerateContentConfig(
+            temperature=0.85, 
+            max_output_tokens=3000,
+            response_mime_type="application/json"
+        )
     )
     text = resp.text.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    return json.loads(text)
+    
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"JSON Parse Error: {e}\nRaw Text: {text}")
+        # محاولة أخيرة لتنظيف النص قبل الفشل
+        text = text.replace('\\"', '"').replace('\n', '\\n')
+        try:
+            return json.loads(text)
+        except:
+            raise RuntimeError(f"Failed to parse AI response as JSON: {e}")
 
 # ── HTML Interface ────────────────────────────────────────────────────────────
 HTML = r"""<!DOCTYPE html>
@@ -731,7 +745,6 @@ def get_profile(user_id: int):
         "lessons": [dict(l) for l in lessons]
     }
 
-import os
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("zyzo_pro:app", host="0.0.0.0", port=port, reload=False)
