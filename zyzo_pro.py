@@ -3,7 +3,7 @@ zyzo_pro — نسخة كاملة جاهزة للرفع على Railway ومتوا
 تشغيل محلي: python zyzo_pro.py
 """
 
-import json, os, sqlite3, sys, webbrowser, threading, time
+import json, os, sqlite3
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from pathlib import Path
@@ -731,6 +731,7 @@ def get_profile(user_id: int):
         "lessons": [dict(l) for l in lessons]
     }
 
+import os
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("zyzo_pro:app", host="0.0.0.0", port=port, reload=False)
